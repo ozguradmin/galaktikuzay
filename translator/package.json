@@ -1,13 +1,11 @@
 {
-  "name": "galaktikuzay-automation",
+  "name": "galaktikuzay-translator",
   "version": "1.0.0",
-  "description": "Galaktikuzay.com automated space news publishing system",
   "private": true,
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
-    "db:migrate": "wrangler d1 execute galaktikuzay-db --remote --file=./migrations/0001_init.sql",
-    "tail": "wrangler tail"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "hono": "4.12.32"

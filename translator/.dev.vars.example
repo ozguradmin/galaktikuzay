@@ -1,0 +1,5 @@
+AZURE_OPENAI_ENDPOINT=https://example.openai.azure.com
+AZURE_OPENAI_KEY=replace-me
+WP_USERNAME=replace-me
+WP_APP_PASSWORD=replace-me
+TELEGRAM_BOT_TOKEN=replace-me

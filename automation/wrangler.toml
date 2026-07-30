@@ -14,7 +14,12 @@ binding = "DB"
 database_name = "galaktikuzay-db"
 database_id = "075e2f3c-87ce-49ea-8c61-432aab8c5dee"
 
-# Cron Triggers - run every hour
+[[services]]
+binding = "TRANSLATOR"
+service = "galaktikuzay-translator"
+environment = "production"
+
+# Cron trigger - check the publishing schedule every 10 minutes
 [triggers]
 crons = ["*/10 * * * *"]
 

@@ -106,7 +106,7 @@ export async function publishPost(
     content: content.content_html,
     excerpt: content.meta_description,
     status: asDraft ? 'draft' : 'publish',
-    categories: categoryIds.length > 0 ? categoryIds : [128129], // Default: Uzay
+    categories: categoryIds.length > 0 ? categoryIds : [128245], // Default: Turkish "Uzay"
   };
 
   if (mediaId) {

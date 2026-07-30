@@ -35,8 +35,8 @@ export async function savePublishedPost(db: D1Database, post: PublishedPost): Pr
     .prepare(
       `INSERT INTO published_posts
        (wp_post_id, title, slug, source_url, source_title, source_domain,
-        category, tags, meta_description, image_url, word_count, model_used, published_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        category, tags, meta_description, image_url, word_count, model_used, published_at, lang)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     )
     .bind(
       post.wp_post_id,
@@ -51,7 +51,8 @@ export async function savePublishedPost(db: D1Database, post: PublishedPost): Pr
       post.image_url ?? null,
       post.word_count,
       post.model_used,
-      post.published_at
+      post.published_at,
+      post.lang ?? 'tr'
     )
     .run();
 }

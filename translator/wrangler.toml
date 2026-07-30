@@ -1,0 +1,16 @@
+name = "galaktikuzay-translator"
+main = "src/index.ts"
+compatibility_date = "2025-06-09"
+compatibility_flags = ["nodejs_compat"]
+keep_vars = false
+
+[observability]
+enabled = true
+
+[[d1_databases]]
+binding = "DB"
+database_name = "galaktikuzay-db"
+database_id = "075e2f3c-87ce-49ea-8c61-432aab8c5dee"
+
+[vars]
+WP_SITE_URL = "https://galaktikuzay.com"

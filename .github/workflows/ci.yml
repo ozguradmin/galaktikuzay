@@ -15,8 +15,8 @@ jobs:
       run:
         working-directory: automation
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
@@ -30,8 +30,8 @@ jobs:
       run:
         working-directory: dashboard
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
@@ -39,3 +39,19 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run build
+
+  translator:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: translator
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: translator/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npx wrangler deploy --dry-run

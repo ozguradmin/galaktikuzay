@@ -29,10 +29,10 @@ export const CONFIG = {
 
   // WordPress settings
   WP_CATEGORIES: {
-    'Uzay': 128129,
-    'Astronomi': 128130,
-    'Teknoloji': 128131,
-    'Keşifler': 128132,
+    'Uzay': 128245,
+    'Astronomi': 128243,
+    'Teknoloji': 128350,
+    'Keşifler': 128264,
   } as Record<string, number>,
 
   // Telegram commands

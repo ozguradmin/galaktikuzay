@@ -3,6 +3,9 @@ export interface Env {
   // D1 database binding
   DB: D1Database;
 
+  // Internal service binding
+  TRANSLATOR: Fetcher;
+
   // Secrets (set via `wrangler secret put`)
   AZURE_OPENAI_KEY: string;
   AZURE_OPENAI_ENDPOINT: string;
@@ -43,6 +46,7 @@ export interface PublishedPost {
   word_count: number;
   model_used: string;
   published_at: string; // ISO 8601
+  lang?: string;
   created_at?: string;
 }
 

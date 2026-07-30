@@ -19,6 +19,7 @@ import { selectBestNews, generateBlogPost } from './services/contentGenerator';
 import { findImage } from './services/imageSearch';
 import { uploadImageToWP, publishPost } from './services/wordpressPublisher';
 import { postTweet } from './services/twitterPublisher';
+import { publishTranslations } from './services/translationPublisher';
 import {
   sendMessage,
   sendPostNotification,
@@ -263,12 +264,24 @@ app.get('/llms.txt', async (c) => {
   }
 });
 
-// Health check
-app.get('/', (c) => {
+// Health check also verifies the internal Translator service binding without
+// creating content or touching WordPress.
+app.get('/', async (c) => {
+  let translator = 'unavailable';
+  try {
+    const response = await c.env.TRANSLATOR.fetch(
+      new Request('https://galaktikuzay-translator/health')
+    );
+    translator = response.ok ? 'healthy' : `error:${response.status}`;
+  } catch {
+    translator = 'unavailable';
+  }
+
   return c.json({
     name: 'galaktikuzay-automation',
     status: 'running',
     version: '1.0.0',
+    translator,
   });
 });
 
@@ -409,12 +422,24 @@ async function runPublishPipeline(env: Env, forced = false, asDraft = false): Pr
       word_count: content.word_count,
       model_used: 'gpt-chat-latest-2',
       published_at: publishedAt,
+      lang: 'tr',
     });
 
     // Update last publish time & total count
     await setConfig(db, 'last_publish_time', publishedAt);
     const totalStr = await getConfig(db, 'total_published') ?? '0';
     await setConfig(db, 'total_published', String(parseInt(totalStr, 10) + 1));
+
+    // Step 7.25: Publish and link EN/DE/ES/FR/NL translations through the
+    // dedicated Translator Worker. The Turkish post remains the source entry.
+    await publishTranslations(
+      env,
+      db,
+      wpPost.id,
+      content,
+      mediaId,
+      asDraft
+    );
 
     // Step 7.5: Post to X (Twitter) if the post is published live (not as a draft)
     if (!asDraft && content.social_sharing_kit?.twitter_hook) {

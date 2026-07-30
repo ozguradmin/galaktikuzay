@@ -5,10 +5,11 @@
 [![TypeScript](https://img.shields.io/badge/language-TypeScript-3178c6)](https://www.typescriptlang.org/)
 [![CI](https://github.com/ozguradmin/galaktikuzay/actions/workflows/ci.yml/badge.svg)](https://github.com/ozguradmin/galaktikuzay/actions/workflows/ci.yml)
 
-Galaktik Uzay is a live Turkish astronomy platform backed by an automated
+Galaktik Uzay is a live multilingual astronomy platform backed by an automated
 editorial pipeline. The system discovers recent space news, filters duplicate
-or stale stories, selects a candidate, creates a structured Turkish draft,
-finds attributable images, and sends the result to WordPress.
+or stale stories, selects a candidate, creates the source article in Turkish,
+finds attributable images, and publishes linked English, German, Spanish,
+French, and Dutch editions through a dedicated translation worker.
 
 **Live product:** [galaktikuzay.com](https://galaktikuzay.com/)
 
@@ -23,6 +24,10 @@ finds attributable images, and sends the result to WordPress.
 - Searches NASA Images first, then uses Serper as a fallback.
 - Uploads selected images and publishes posts or review drafts through the
   WordPress REST API.
+- Uses a separate Cloudflare Worker to translate the Turkish source article
+  into English, German, Spanish, French, and Dutch.
+- Connects all six language editions through the site's Polylang bridge and
+  stores each edition in D1 with its language code.
 - Runs on a configurable publishing schedule with Cloudflare Workers cron.
 - Sends operational updates through Telegram and can share published posts on X.
 - Provides a Next.js dashboard for status, logs, scheduling, draft generation,
@@ -41,6 +46,10 @@ flowchart LR
     Worker --> Images["NASA Images / Serper"]
     Worker <--> D1["Cloudflare D1"]
     Worker --> WP["WordPress REST API"]
+    Worker --> Translator["Translator Worker"]
+    Translator --> Azure
+    Translator --> WP
+    Translator --> D1
     WP --> Site["galaktikuzay.com"]
     Dashboard["Next.js Dashboard"] --> Proxy["Authenticated server proxy"]
     Proxy --> Worker
@@ -65,6 +74,8 @@ an HMAC-signed HttpOnly session cookie, and a separate Worker API token.
 │       ├── app/
 │       ├── lib/
 │       └── proxy.ts
+├── translator/               # EN/DE/ES/FR/NL translation Worker
+│   └── src/
 └── docs/images/              # README product screenshots
 ```
 
@@ -75,7 +86,7 @@ an HMAC-signed HttpOnly session cookie, and a separate Worker API token.
 | Runtime | Cloudflare Workers, Hono |
 | Storage | Cloudflare D1 |
 | Dashboard | Next.js 16, React 19 |
-| AI | Azure OpenAI |
+| AI | Azure OpenAI for Turkish generation and multilingual translation |
 | Discovery | Tavily |
 | Images | NASA Images API, Serper |
 | Publishing | WordPress REST API, X API |
@@ -117,6 +128,19 @@ The dashboard expects:
 - `DASHBOARD_PASSWORD`: new administrator password.
 - `DASHBOARD_SESSION_SECRET`: at least 32 random characters used to sign sessions.
 
+### Translator Worker
+
+```bash
+cd translator
+npm ci
+cp .dev.vars.example .dev.vars
+npm run dev
+```
+
+The automation Worker calls the translator through a Cloudflare service
+binding. A Turkish source article is always created first; EN, DE, ES, FR, and
+NL editions are then generated sequentially and linked as one Polylang group.
+
 ## Production secrets
 
 Real credentials must never be committed. Worker credentials are configured
@@ -138,6 +162,10 @@ wrangler secret put TWITTER_ACCESS_SECRET
 wrangler secret put DASHBOARD_API_TOKEN
 wrangler secret put CRON_SECRET
 ```
+
+The Translator Worker uses its own copies of `AZURE_OPENAI_ENDPOINT`,
+`AZURE_OPENAI_KEY`, `WP_USERNAME`, `WP_APP_PASSWORD`, and
+`TELEGRAM_BOT_TOKEN`.
 
 Use different random values for `DASHBOARD_API_TOKEN`, `CRON_SECRET`,
 `DASHBOARD_PASSWORD`, and `DASHBOARD_SESSION_SECRET`.
@@ -169,6 +197,11 @@ cd ../dashboard
 npm ci
 npm run lint
 npm run build
+
+cd ../translator
+npm ci
+npm run typecheck
+npx wrangler deploy --dry-run
 ```
 
 ## Security
@@ -179,4 +212,3 @@ npm run build
 - Cron authentication uses a dedicated secret rather than an AI provider key.
 - Before publishing changes, scan both the working tree and Git history for
   accidental credentials.
-

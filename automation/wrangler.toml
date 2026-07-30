@@ -1,0 +1,25 @@
+#:schema node_modules/wrangler/config-schema.json
+name = "galaktikuzay-automation"
+main = "src/index.ts"
+compatibility_date = "2025-06-09"
+compatibility_flags = ["nodejs_compat"]
+keep_vars = false
+
+[observability]
+enabled = true
+
+# D1 Database
+[[d1_databases]]
+binding = "DB"
+database_name = "galaktikuzay-db"
+database_id = "075e2f3c-87ce-49ea-8c61-432aab8c5dee"
+
+# Cron Triggers - run every hour
+[triggers]
+crons = ["*/10 * * * *"]
+
+# Environment variables (secrets set via wrangler secret)
+[vars]
+TIMEZONE = "Europe/Istanbul"
+WP_SITE_URL = "https://galaktikuzay.com"
+WORKER_URL = "https://galaktikuzay-automation.ozgurglr256.workers.dev"

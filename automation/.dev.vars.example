@@ -1,0 +1,14 @@
+AZURE_OPENAI_KEY=replace-me
+AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com
+TAVILY_API_KEY=replace-me
+SERPER_API_KEY=replace-me
+WP_APP_PASSWORD=replace-me
+WP_USERNAME=replace-me
+TELEGRAM_BOT_TOKEN=replace-me
+TELEGRAM_CHAT_ID=replace-me
+TWITTER_API_KEY=replace-me
+TWITTER_API_SECRET=replace-me
+TWITTER_ACCESS_TOKEN=replace-me
+TWITTER_ACCESS_SECRET=replace-me
+DASHBOARD_API_TOKEN=replace-with-the-same-random-token-used-by-the-dashboard
+CRON_SECRET=replace-with-a-separate-random-token

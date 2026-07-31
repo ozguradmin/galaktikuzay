@@ -1,4 +1,10 @@
-import type { ProviderConfig, ProviderName } from "./types.js";
+import type {
+  ProviderConfig,
+  ProviderName,
+  ResponseFormatMode,
+} from "./types.js";
+
+const RESPONSE_FORMAT_MODES = ["auto", "json_object", "none"] as const;
 
 function optionalNumber(name: string): number | undefined {
   const raw = process.env[name];
@@ -25,6 +31,16 @@ function jsonObject(name: string): Record<string, string> {
   return Object.fromEntries(
     Object.entries(value).map(([key, item]) => [key, String(item)]),
   );
+}
+
+function responseFormatMode(name: string): ResponseFormatMode {
+  const value = process.env[name] ?? "auto";
+  if (!RESPONSE_FORMAT_MODES.includes(value as ResponseFormatMode)) {
+    throw new Error(
+      `${name} must be one of: ${RESPONSE_FORMAT_MODES.join(", ")}.`,
+    );
+  }
+  return value as ResponseFormatMode;
 }
 
 export function loadProviderConfig(name: ProviderName, mock: boolean): ProviderConfig {
@@ -59,5 +75,6 @@ export function loadProviderConfig(name: ProviderName, mock: boolean): ProviderC
     outputCostPerMillion: optionalNumber(`${prefix}_OUTPUT_COST_PER_MILLION`),
     timeoutMs: optionalNumber("REQUEST_TIMEOUT_MS") ?? 60_000,
     maxRetries: optionalNumber("MAX_RETRIES") ?? 2,
+    responseFormatMode: responseFormatMode(`${prefix}_RESPONSE_FORMAT_MODE`),
   };
 }

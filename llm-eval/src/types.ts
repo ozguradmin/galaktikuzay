@@ -2,6 +2,7 @@ export const TASK_TYPES = ["story-selection", "article-generation", "translation
 
 export type TaskType = (typeof TASK_TYPES)[number];
 export type ProviderName = "baseline" | "candidate";
+export type ResponseFormatMode = "auto" | "json_object" | "none";
 
 export interface Source {
   url: string;
@@ -40,6 +41,7 @@ export interface ProviderConfig {
   outputCostPerMillion?: number;
   timeoutMs: number;
   maxRetries: number;
+  responseFormatMode: ResponseFormatMode;
 }
 
 export interface CompletionResult {
@@ -51,6 +53,7 @@ export interface CompletionResult {
   outputTokens: number | null;
   totalTokens: number | null;
   retries: number;
+  responseFormatFallbacks: number;
 }
 
 export interface EvaluationMetrics {
@@ -77,6 +80,7 @@ export interface EvaluationResult {
   success: boolean;
   timedOut: boolean;
   retries: number;
+  responseFormatFallbacks: number;
   output: string | null;
   parsedOutput: unknown | null;
   metrics: EvaluationMetrics | null;

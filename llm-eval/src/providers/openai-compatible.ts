@@ -21,6 +21,7 @@ export class ProviderRequestError extends Error {
     message: string,
     readonly retries: number,
     readonly timedOut: boolean,
+    readonly responseFormatFallbacks: number,
   ) {
     super(message);
     this.name = "ProviderRequestError";
@@ -53,6 +54,18 @@ function isRetryable(status: number): boolean {
   return status === 408 || status === 409 || status === 429 || status >= 500;
 }
 
+function isResponseFormatCompatibilityError(
+  status: number,
+  message: string,
+): boolean {
+  return (
+    (status === 400 || status === 422) &&
+    /response[_ -]?format|json mode|structured output|unsupported parameter/i.test(
+      message,
+    )
+  );
+}
+
 function wait(milliseconds: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, milliseconds));
 }
@@ -65,8 +78,10 @@ export class OpenAICompatibleProvider {
     temperature: number,
   ): Promise<CompletionResult> {
     let retries = 0;
+    let responseFormatFallbacks = 0;
+    let includeResponseFormat = this.config.responseFormatMode !== "none";
+    const overallStarted = performance.now();
     while (true) {
-      const started = performance.now();
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), this.config.timeoutMs);
       try {
@@ -78,24 +93,38 @@ export class OpenAICompatibleProvider {
           this.config.apiKeyHeader.toLowerCase() === "authorization"
             ? `Bearer ${this.config.apiKey}`
             : this.config.apiKey;
+        const body: Record<string, unknown> = {
+          model: this.config.model,
+          temperature,
+          messages: [
+            { role: "system", content: systemPrompt(record.task) },
+            { role: "user", content: JSON.stringify(record.input) },
+          ],
+        };
+        if (includeResponseFormat) {
+          body.response_format = { type: "json_object" };
+        }
         const response = await fetch(completionUrl(this.config), {
           method: "POST",
           headers,
           signal: controller.signal,
-          body: JSON.stringify({
-            model: this.config.model,
-            temperature,
-            response_format: { type: "json_object" },
-            messages: [
-              { role: "system", content: systemPrompt(record.task) },
-              { role: "user", content: JSON.stringify(record.input) },
-            ],
-          }),
+          body: JSON.stringify(body),
         });
-        const latencyMs = performance.now() - started;
-        const payload = (await response.json()) as ChatCompletionResponse;
+        const payload = (await response
+          .json()
+          .catch(() => ({}))) as ChatCompletionResponse;
         if (!response.ok) {
           const message = payload.error?.message ?? `HTTP ${response.status}`;
+          if (
+            this.config.responseFormatMode === "auto" &&
+            includeResponseFormat &&
+            responseFormatFallbacks === 0 &&
+            isResponseFormatCompatibilityError(response.status, message)
+          ) {
+            includeResponseFormat = false;
+            responseFormatFallbacks = 1;
+            continue;
+          }
           if (isRetryable(response.status) && retries < this.config.maxRetries) {
             retries += 1;
             await wait(250 * 2 ** (retries - 1));
@@ -105,6 +134,7 @@ export class OpenAICompatibleProvider {
             `Provider request failed: ${message}`,
             retries,
             false,
+            responseFormatFallbacks,
           );
         }
         const content = payload.choices?.[0]?.message?.content;
@@ -113,17 +143,19 @@ export class OpenAICompatibleProvider {
             "Provider returned no message content.",
             retries,
             false,
+            responseFormatFallbacks,
           );
         }
         return {
           content,
           model: payload.model ?? this.config.model,
-          latencyMs,
+          latencyMs: performance.now() - overallStarted,
           firstTokenLatencyMs: null,
           inputTokens: payload.usage?.prompt_tokens ?? null,
           outputTokens: payload.usage?.completion_tokens ?? null,
           totalTokens: payload.usage?.total_tokens ?? null,
           retries,
+          responseFormatFallbacks,
         };
       } catch (error) {
         if (error instanceof ProviderRequestError) throw error;
@@ -136,6 +168,7 @@ export class OpenAICompatibleProvider {
             `Request timed out after ${this.config.timeoutMs}ms.`,
             retries,
             true,
+            responseFormatFallbacks,
           );
         }
         if (retries < this.config.maxRetries) {
@@ -147,6 +180,7 @@ export class OpenAICompatibleProvider {
           error instanceof Error ? error.message : String(error),
           retries,
           false,
+          responseFormatFallbacks,
         );
       } finally {
         clearTimeout(timer);
@@ -208,5 +242,6 @@ export async function mockCompletion(
     outputTokens,
     totalTokens: inputTokens + outputTokens,
     retries: 0,
+    responseFormatFallbacks: 0,
   };
 }

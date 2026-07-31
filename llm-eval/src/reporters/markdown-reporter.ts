@@ -10,6 +10,7 @@ export interface ProviderSummary {
   errors: number;
   timeouts: number;
   retries: number;
+  responseFormatFallbacks: number;
   successRate: number;
   averageLatencyMs: number | null;
   p95LatencyMs: number | null;
@@ -51,6 +52,10 @@ export function summarizeProvider(
     errors: selected.filter((result) => !result.success).length,
     timeouts: selected.filter((result) => result.timedOut).length,
     retries: selected.reduce((sum, result) => sum + result.retries, 0),
+    responseFormatFallbacks: selected.reduce(
+      (sum, result) => sum + result.responseFormatFallbacks,
+      0,
+    ),
     successRate: selected.length === 0 ? 0 : selected.filter((r) => r.success).length / selected.length,
     averageLatencyMs:
       latencies.length === 0
@@ -94,11 +99,11 @@ export function renderMarkdown(run: EvaluationRun): string {
     "",
     "## Baseline and candidate comparison",
     "",
-    "| Provider | Model | Success | Errors | Timeouts | Retries | Avg latency (ms) | p95 latency (ms) | JSON valid | Schema compliant | Estimated cost |",
-    "| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
+    "| Provider | Model | Success | Errors | Timeouts | Retries | Format fallbacks | Avg latency (ms) | p95 latency (ms) | JSON valid | Schema compliant | Estimated cost |",
+    "| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
     ...providers.map(
       (summary) =>
-        `| ${summary.provider} | ${summary.model} | ${percent(summary.successRate)} | ${summary.errors} | ${summary.timeouts} | ${summary.retries} | ${number(summary.averageLatencyMs)} | ${number(summary.p95LatencyMs)} | ${percent(summary.jsonValidityRate)} | ${percent(summary.schemaComplianceRate)} | ${cost(summary.estimatedCostUsd)} |`,
+        `| ${summary.provider} | ${summary.model} | ${percent(summary.successRate)} | ${summary.errors} | ${summary.timeouts} | ${summary.retries} | ${summary.responseFormatFallbacks} | ${number(summary.averageLatencyMs)} | ${number(summary.p95LatencyMs)} | ${percent(summary.jsonValidityRate)} | ${percent(summary.schemaComplianceRate)} | ${cost(summary.estimatedCostUsd)} |`,
     ),
     "",
     "## Failed samples",

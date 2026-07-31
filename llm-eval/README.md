@@ -43,11 +43,27 @@ environment and never commit API keys.
 BASELINE_BASE_URL=https://api.example.com/v1
 BASELINE_API_KEY=local-secret
 BASELINE_MODEL=baseline-model
+BASELINE_RESPONSE_FORMAT_MODE=auto
 
 CANDIDATE_BASE_URL=https://api.example.com/v1
 CANDIDATE_API_KEY=local-secret
 CANDIDATE_MODEL=candidate-model
+CANDIDATE_RESPONSE_FORMAT_MODE=auto
 ```
+
+Response-format behavior is configured independently for each provider:
+
+- `auto` (default) sends `response_format: { "type": "json_object" }` first.
+  If the provider returns HTTP 400 or 422 with an error referring to
+  `response_format`, JSON mode, structured output, or an unsupported parameter,
+  the same sample is retried once without `response_format`.
+- `json_object` always sends the JSON-object response format and never applies
+  the compatibility fallback.
+- `none` never sends a `response_format` field.
+
+The auto fallback is not applied to authorization failures such as HTTP 401 or
+403, or to unrelated validation errors. Reports count it separately as
+`responseFormatFallbacks`; it does not increase the normal network retry count.
 
 By default, `/chat/completions` is appended to each base URL and the key is sent
 as `Authorization: Bearer ...`. A URL that already ends in `/chat/completions`
@@ -163,8 +179,9 @@ translation datasets under `data/`.
   unavailable because the current portable client uses non-streaming responses.
 - **Estimated cost:** applies user-supplied prices to provider-reported token
   counts. It does not claim to be a billing statement.
-- **Reliability:** reports successes, errors, timeouts, retries, JSON validity,
-  and schema success rates for each provider.
+- **Reliability:** reports successes, errors, timeouts, network retries,
+  response-format compatibility fallbacks, JSON validity, and schema success
+  rates for each provider.
 
 Automated metrics are useful screening signals. Editorial quality, factual
 accuracy, safety, and translation fidelity still require expert review.
@@ -174,7 +191,8 @@ accuracy, safety, and translation fidelity still require expert review.
 Every run writes:
 
 - `results.json`: run metadata, raw output, per-sample metrics, and errors.
-- `results.csv`: flat per-sample comparison data.
+- `results.csv`: flat per-sample comparison data, including separate network
+  retry and response-format fallback counts.
 - `summary.md`: provider models, dataset, sample count, success and error rates,
   average and p95 latency, JSON/schema rates, estimated cost, and failed samples.
 

@@ -20,6 +20,7 @@ const run: EvaluationRun = {
       success: true,
       timedOut: false,
       retries: 0,
+      responseFormatFallbacks: 1,
       output: "{}",
       parsedOutput: {},
       error: null,
@@ -49,12 +50,14 @@ describe("markdown reporter", () => {
       errors: 0,
       averageLatencyMs: 20,
       p95LatencyMs: 20,
+      responseFormatFallbacks: 1,
     });
   });
 
   it("renders the comparison and unconfigured cost", () => {
     const markdown = renderMarkdown(run);
     expect(markdown).toContain("Baseline and candidate comparison");
+    expect(markdown).toContain("Format fallbacks");
     expect(markdown).toContain("not configured");
   });
 });

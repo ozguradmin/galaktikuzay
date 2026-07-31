@@ -36,6 +36,15 @@ French, and Dutch editions through a dedicated translation worker.
 The repository does **not** currently generate images or run a local model.
 Those ideas are listed separately in the roadmap below.
 
+## Open-source LLM evaluation toolkit
+
+An independently licensed evaluation toolkit for comparing OpenAI-compatible
+multilingual model endpoints is available under [`llm-eval/`](llm-eval/). It
+supports structured-output, source-adherence, latency, token-usage, and cost
+comparisons. The toolkit is separate from the current production publishing
+pipeline; its scoped MIT license does not automatically apply to other parts of
+this repository.
+
 ## Architecture
 
 ```mermaid

@@ -1,0 +1,32 @@
+name: LLM Eval CI
+
+on:
+  push:
+    paths:
+      - "llm-eval/**"
+      - ".github/workflows/llm-eval-ci.yml"
+  pull_request:
+    paths:
+      - "llm-eval/**"
+      - ".github/workflows/llm-eval-ci.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: llm-eval
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: llm-eval/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build

@@ -1,0 +1,26 @@
+{
+  "name": "@galaktikuzay/llm-eval",
+  "version": "0.1.0",
+  "description": "Provider-agnostic evaluation toolkit for OpenAI-compatible multilingual LLM endpoints",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "eval": "tsx src/cli.ts",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "ajv": "8.20.0",
+    "dotenv": "17.4.2"
+  },
+  "devDependencies": {
+    "@types/node": "22.18.6",
+    "tsx": "4.23.1",
+    "typescript": "5.9.3",
+    "vitest": "3.2.7"
+  }
+}

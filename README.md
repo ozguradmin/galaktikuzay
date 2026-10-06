@@ -36,6 +36,17 @@ French, and Dutch editions through a dedicated translation worker.
 The repository does **not** currently generate images or run a local model.
 Those ideas are listed separately in the roadmap below.
 
+## Built with Claude Code
+
+Galaktik Uzay is developed and maintained by a solo founder working with
+[Claude Code](https://claude.com/claude-code). New pipeline features, fixes,
+and refactors are built in Claude Code sessions, and commits made that way
+carry a `Co-Authored-By: Claude` trailer. Galaktik Uzay is a member of the
+Claude Startups program.
+
+Moving the publishing pipeline itself onto the Claude API is in progress; see
+the roadmap below.
+
 ## Open-source LLM evaluation toolkit
 
 An independently licensed evaluation toolkit for comparing OpenAI-compatible
@@ -95,7 +106,8 @@ an HMAC-signed HttpOnly session cookie, and a separate Worker API token.
 | Runtime | Cloudflare Workers, Hono |
 | Storage | Cloudflare D1 |
 | Dashboard | Next.js 16, React 19 |
-| AI | Azure OpenAI for Turkish generation and multilingual translation |
+| AI | Azure OpenAI for Turkish generation and multilingual translation (Claude API migration in progress) |
+| Development | Claude Code |
 | Discovery | Tavily |
 | Images | NASA Images API, Serper |
 | Publishing | WordPress REST API, X API |
@@ -178,6 +190,22 @@ The Translator Worker uses its own copies of `AZURE_OPENAI_ENDPOINT`,
 
 Use different random values for `DASHBOARD_API_TOKEN`, `CRON_SECRET`,
 `DASHBOARD_PASSWORD`, and `DASHBOARD_SESSION_SECRET`.
+
+## Claude API roadmap
+
+This section describes planned work, not functionality already present in the
+production pipeline.
+
+1. Add Claude as a provider for story selection, Turkish article generation,
+   and translation, behind a configuration switch that keeps the current
+   provider as a fallback.
+2. Use Claude Sonnet 5.5 for story selection and Turkish articles, and Claude
+   Haiku 4.5 for the five translations.
+3. Compare Claude against the current provider with
+   [`llm-eval`](llm-eval/) on JSON validity, source adherence, translation
+   consistency, latency, and cost before switching any stage.
+4. Enable Claude stage by stage once the comparison holds up, starting with
+   Turkish article generation.
 
 ## GPU and open-model roadmap
 
